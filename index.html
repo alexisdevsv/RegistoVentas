@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ControlVentas</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+
+    <header class="encabezado">
+
+        <div class="marca">
+
+            <div class="logo">CV</div>
+
+            <div>
+                <h1>ControlVentas</h1>
+                <p>Registro diario del negocio</p>
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+
+    <main class="contenedor">
+
+        <!-- BIENVENIDA -->
+
+        <section class="bienvenida">
+
+            <div>
+
+                <p class="etiqueta">REGISTRO DIARIO</p>
+
+                <h2>Nueva venta</h2>
+
+                <p>
+                    Agrega los productos que el cliente compró.
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- FORMULARIO DE VENTA -->
+
+        <section class="panel" id="panelVentas">
+
+            <!-- TITULO -->
+
+            <div class="panel-titulo">
+
+                <div>
+
+                    <h3>Productos</h3>
+
+                    <p>
+                        Ingresa el nombre, cantidad y precio.
+                    </p>
+
+                </div>
+
+                <span class="contador" id="contador">
+                    1 producto
+                </span>
+
+            </div>
+
+            <!-- LISTA DE PRODUCTOS -->
+
+            <div id="listaProductos"></div>
+
+            <!-- AGREGAR PRODUCTO -->
+
+            <button
+                type="button"
+                class="boton-agregar"
+                id="agregarProducto">
+
+                + Agregar otro producto
+
+            </button>
+
+            <!-- RESUMEN DE VENTA -->
+
+            <div class="resumen">
+
+                <div class="resumen-linea">
+
+                    <span>Productos registrados</span>
+
+                    <span id="cantidadProductos">0</span>
+
+                </div>
+
+                <div class="total">
+
+                    <span>Total de la venta</span>
+
+                    <strong id="totalVenta">$0.00</strong>
+
+                </div>
+
+            </div>
+
+            <!-- REGISTRAR -->
+
+            <button
+                type="button"
+                class="boton-guardar"
+                id="guardarVenta">
+
+                Registrar venta
+
+            </button>
+
+        </section>
+
+    </main>
+
+    <!-- MENSAJES -->
+
+    <div
+        id="mensaje"
+        class="mensaje"
+        role="status"
+        aria-live="polite">
+
+    </div>
+
+    <!-- SUPABASE -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- JAVASCRIPT DEL SISTEMA -->
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+
