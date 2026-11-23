@@ -17,7 +17,15 @@ const NEGOCIO_ID = 1;
 
 const clienteSupabase = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_KEY
+    SUPABASE_KEY,
+    {
+        auth: {
+            storageKey: "cv_registro_sesion_anonima",
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: false
+        }
+    }
 );
 
 // ==========================================
@@ -369,3 +377,4 @@ async function iniciarSistema() {
 }
 
 iniciarSistema();
+
