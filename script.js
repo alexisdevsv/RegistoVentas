@@ -61,8 +61,12 @@ function ocultarMensaje() {
 // CONEXION Y SESION ANONIMA
 // ==========================================
 
+
 async function iniciarSesion() {
 
+    sesionIniciada = false;
+
+    // Comprobar si existe una sesión
     const { data, error } =
         await clienteSupabase.auth.getSession();
 
@@ -70,20 +74,45 @@ async function iniciarSesion() {
         throw error;
     }
 
+    // Si existe una sesión, comprobar que sea anónima
     if (data.session) {
-        sesionIniciada = true;
-        return;
+
+        const esAnonima =
+            data.session.user?.is_anonymous === true;
+
+        if (esAnonima) {
+            sesionIniciada = true;
+            return;
+        }
+
+        // Si es una sesión normal, cerrarla localmente
+        const { error: errorCerrar } =
+            await clienteSupabase.auth.signOut({
+                scope: "local"
+            });
+
+        if (errorCerrar) {
+            throw errorCerrar;
+        }
     }
 
-    const { error: errorSesion } =
+    // Crear una sesión anónima nueva
+    const { data: nuevaSesion, error: errorSesion } =
         await clienteSupabase.auth.signInAnonymously();
 
     if (errorSesion) {
         throw errorSesion;
     }
 
+    if (!nuevaSesion.user?.is_anonymous) {
+        throw new Error(
+            "No se pudo establecer una sesión anónima."
+        );
+    }
+
     sesionIniciada = true;
 }
+
 
 // ==========================================
 // AGREGAR PRODUCTO
@@ -377,4 +406,5 @@ async function iniciarSistema() {
 }
 
 iniciarSistema();
+
 
