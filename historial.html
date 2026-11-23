@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de ventas | ControlVentas</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7f5;
+            color: #25352c;
+            padding: 20px;
+        }
+
+        .contenedor {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #e3e9e5;
+        }
+
+        header h1 {
+            color: #21804b;
+            font-size: 25px;
+        }
+
+        header p {
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid #e3e9e5;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 12px;
+            border: 1px solid #d5ded8;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            background: #21804b;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #176638;
+        }
+
+        .secundario {
+            background: #64756a;
+        }
+
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tarjeta {
+            background: white;
+            border: 1px solid #e3e9e5;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .tarjeta p {
+            color: #777;
+            margin-bottom: 10px;
+        }
+
+        .tarjeta h3 {
+            font-size: 25px;
+            color: #21804b;
+        }
+
+        .venta {
+            border: 1px solid #e3e9e5;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .venta-cabecera {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .venta-cabecera h3 {
+            color: #21804b;
+        }
+
+        .producto {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .producto:last-child {
+            border-bottom: none;
+        }
+
+        .producto p {
+            margin: 5px 0;
+            color: #626e66;
+        }
+
+        .total-venta {
+            text-align: right;
+            margin-top: 15px;
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .mensaje {
+            margin-top: 12px;
+            color: #b23b3b;
+            overflow-wrap: anywhere;
+        }
+
+        #panelHistorial {
+            display: none;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+
+            .venta-cabecera {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <header>
+        <h1>CV | ControlVentas</h1>
+        <p>Consulta de ventas del negocio</p>
+    </header>
+
+    <section class="panel" id="panelLogin">
+
+        <h2>Inicio de sesión</h2>
+        <p style="margin-bottom:15px;color:#777">
+            Ingresa tus credenciales para consultar las ventas.
+        </p>
+
+        <input
+            type="email"
+            id="correo"
+            placeholder="Correo electrónico"
+            autocomplete="username"
+        >
+
+        <input
+            type="password"
+            id="contrasena"
+            placeholder="Contraseña"
+            autocomplete="current-password"
+        >
+
+        <button id="btnLogin" onclick="iniciarSesion()">
+            Iniciar sesión
+        </button>
+
+        <p class="mensaje" id="mensajeLogin"></p>
+
+    </section>
+
+    <section id="panelHistorial">
+
+        <div class="acciones">
+            <button onclick="cargarVentas()">
+                Actualizar ventas
+            </button>
+
+            <button class="secundario" onclick="cerrarSesion()">
+                Cerrar sesión
+            </button>
+        </div>
+
+        <div class="resumen">
+
+            <div class="tarjeta">
+                <p>Total de ventas</p>
+                <h3 id="numeroVentas">0</h3>
+            </div>
+
+            <div class="tarjeta">
+                <p>Total vendido</p>
+                <h3 id="totalGeneral">$0.00</h3>
+            </div>
+
+        </div>
+
+        <div class="panel">
+            <h2>Ventas registradas</h2>
+            <div id="listaVentas"></div>
+            <p class="mensaje" id="mensajeHistorial"></p>
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+    const SUPABASE_URL =
+        "https://aptbgtlbjwpeubyvvfcv.supabase.co";
+
+    const SUPABASE_KEY =
+        "sb_publishable_4zumSASHWBEMt7LIlhA1xw_1xZ3Bz0r";
+
+    const clienteSupabase =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+    function dinero(valor) {
+        return Number(valor || 0).toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD"
+        });
+    }
+
+    function escaparHTML(texto) {
+        return String(texto ?? "").replace(/[&<>"']/g, caracter => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[caracter]));
+    }
+
+    function fechaLocal(fecha) {
+        return new Date(fecha).toLocaleString("es-SV", {
+            timeZone: "America/El_Salvador",
+            dateStyle: "medium",
+            timeStyle: "short"
+        });
+    }
+
+    async function iniciarSesion() {
+
+        const correo = document.getElementById("correo").value.trim();
+        const contrasena = document.getElementById("contrasena").value;
+
+        const mensaje = document.getElementById("mensajeLogin");
+        const boton = document.getElementById("btnLogin");
+
+        mensaje.textContent = "";
+        boton.disabled = true;
+        boton.textContent = "Ingresando...";
+
+        try {
+
+            const { data, error } =
+                await clienteSupabase.auth.signInWithPassword({
+                    email: correo,
+                    password: contrasena
+                });
+
+            if (error) throw error;
+
+            document.getElementById("panelLogin").style.display = "none";
+            document.getElementById("panelHistorial").style.display = "block";
+
+            await cargarVentas();
+
+        } catch (error) {
+
+            mensaje.textContent = "Error: " + error.message;
+
+        } finally {
+
+            boton.disabled = false;
+            boton.textContent = "Iniciar sesión";
+
+        }
+    }
+
+    async function cargarVentas() {
+
+        const lista = document.getElementById("listaVentas");
+        const mensaje = document.getElementById("mensajeHistorial");
+
+        lista.innerHTML = "";
+        mensaje.textContent = "Cargando ventas...";
+
+        try {
+
+            const { data, error } =
+                await clienteSupabase.rpc("cv_consultar_ventas");
+
+            if (error) throw error;
+
+            const ventas = data || [];
+
+            document.getElementById("numeroVentas").textContent =
+                ventas.length;
+
+            const total = ventas.reduce(
+                (acumulado, venta) =>
+                    acumulado + Number(venta.total || 0),
+                0
+            );
+
+            document.getElementById("totalGeneral").textContent =
+                dinero(total);
+
+            if (ventas.length === 0) {
+
+                lista.innerHTML =
+                    "<p>No hay ventas registradas.</p>";
+
+                mensaje.textContent = "";
+                return;
+
+            }
+
+            ventas.forEach(venta => {
+
+                const productos = venta.productos || [];
+
+                const ventaHTML = document.createElement("div");
+                ventaHTML.className = "venta";
+
+                ventaHTML.innerHTML = `
+                    <div class="venta-cabecera">
+                        <h3>Venta #${escaparHTML(venta.venta_id)}</h3>
+                        <p>${escaparHTML(fechaLocal(venta.fecha))}</p>
+                    </div>
+
+                    ${productos.map(producto => `
+                        <div class="producto">
+                            <strong>${escaparHTML(producto.producto)}</strong>
+
+                            <p>
+                                Cantidad:
+                                ${escaparHTML(producto.cantidad)}
+                            </p>
+
+                            <p>
+                                Precio:
+                                ${dinero(producto.precio_unitario)}
+                            </p>
+
+                            <p>
+                                Subtotal:
+                                ${dinero(producto.subtotal)}
+                            </p>
+                        </div>
+                    `).join("")}
+
+                    <div class="total-venta">
+                        Total: ${dinero(venta.total)}
+                    </div>
+                `;
+
+                lista.appendChild(ventaHTML);
+
+            });
+
+            mensaje.textContent = "";
+
+        } catch (error) {
+
+            mensaje.textContent =
+                "No se pudieron cargar las ventas: " + error.message;
+
+        }
+    }
+
+    async function cerrarSesion() {
+
+        await clienteSupabase.auth.signOut();
+
+        document.getElementById("panelHistorial").style.display = "none";
+        document.getElementById("panelLogin").style.display = "block";
+
+        document.getElementById("correo").value = "";
+        document.getElementById("contrasena").value = "";
+        document.getElementById("listaVentas").innerHTML = "";
+
+        document.getElementById("numeroVentas").textContent = "0";
+        document.getElementById("totalGeneral").textContent = "$0.00";
+
+    }
+</script>
+
+</body>
+</html>
